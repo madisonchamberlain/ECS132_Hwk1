@@ -1,0 +1,465 @@
+\documentclass[10pt]{article}
+\usepackage[margin=.75in]{geometry}
+\usepackage[all]{xy}
+\usepackage{comment}
+\usepackage{amsmath,amsthm,amssymb,color,latexsym}
+\usepackage{geometry}        
+\geometry{letterpaper}    
+\usepackage{graphicx}
+\usepackage{listings}
+
+\newtheorem{prob}{Problem}
+
+\newenvironment{sol}[1][\it{Solution}]{\textbf{#1. }}
+
+\begin{document}
+\noindent ECS 132 Homework 1 \\
+Peng Xiao: pexiao@ucdavis.edu \\
+Madison Chamberlain: mchamberlain@ucdavis.edu \\
+Lucille Cao: lhcao@ucdavis.edu\\
+Aamir Godil: agodil@ucdavis.edu 
+
+\hrulefill 
+\begin{prob}
+Let's consider a simple game. Jack and Jill alternate taking turns, rolling a single die. The first one to reach a total of at least $d$ dots wins, with the prize being \$d dollars. Jill rolls first.
+\begin{enumerate}
+    \item Find P(Jill wins).
+    \item Find P(Jill wins, taking 2 turns to do so).
+    \item Find the probability that the difference between the winner's and loser's totals is equal to 1.
+    \item The 10 O'Clock News reports that Jill won, but doesn't say what her prize was. Find the probability that her prize was \$6.
+    \item Write a function with call form \\ 
+    simjj(d,nreps) \\ 
+    that will simulate nreps repetitions of the game, for general values of d. The return value will be an R list, with components winner, prize and loserDots, each of which is a vector of length nreps, showing winners, winners' prize money and losers' number of dots. (E.g. if Jack wins and Jill has accumulated 3 dots by then, then loserDots is 3.)
+\end{enumerate}
+\end{prob}
+
+\begin{sol}
+Let $A_i$ be the roll of Jill and $B_i$ be the roll of Jack where $i$ denotes the turn number. 
+\begin{enumerate}
+    \item P(Jill wins) = P(Jill wins first turn) + P(Jill wins second turn) + P(Jill wins third turn) + P(Jill wins fourth turn)  
+    \begin{align*}
+        P(\text{Jill wins first turn}) = P(A_1 \geq4) = \frac{3}{6}
+    \end{align*}
+    \begin{align*}
+        P(\text{Jill wins second turn}) &= P(\text{Jill and Jack doesn't win on first turn, Jill wins on the second turn}) \\
+        &= P(\text{Jill doesn't win on 1st turn}) P(\text{Jack doesn't win on 1st turn}) \\ &  * P(\text{Jill wins on 2nd turn given she doesn't win on first turn}) \\ 
+        &= P(A_1 < 4) P(B_1 < 4) P(A_1 + A_2 \geq 4 \mid A_1 < 4) \\
+        &= P(A_1 < 4) P(B_1 < 4) * \frac{P(A_1 + A_2 \geq 4, A_1 < 4)}{P(A_1 < 4)}) (\text{mailing tube 2.7}) \\ 
+        &= \frac{3}{6} * \frac{3}{6} * \frac{15}{18} = \frac{5}{24}
+    \end{align*}
+    \begin{align*}
+        P(\text{Jill wins third turn}) &= P(\text{Jill and Jack doesn't win on 1st 2 turns, Jill wins on the third turn}) \\ 
+        &= P(\text{Jill doesn't win on 1st 2 turns}) P(\text{Jack doesn't win on 1st 2 turns}) \\ &  * P(\text{Jill wins on 3rd turn given she doesn't win on 1st 2 turn}) \\
+        &= P(A_1 + A_2 < 4) P(B_1 + B_2 < 4) P(A_1 + A_2 + A_3 \geq 4 \mid A_1 + A_2 < 4) \\ 
+        &= P(A_1 + A_2 < 4) P(B_1 + B_2 < 4)\frac{P(A_1 + A_2 + A_3 \geq 4, A_1 + A_2 < 4)}{P(A_1 + A_2 < 4)} (\text{mailing tube 2.7}) \\
+        &= \frac{3}{36} * \frac{3}{36} * \frac{17}{18} = \frac{17}{2592}
+    \end{align*}
+    \begin{align*}
+        P(\text{Jill wins fourth turn}) &= P(\text{Jill and Jack doesn't win on 1st 3 turns, Jill wins on the fourth turn}) \\ 
+        &= P(\text{Jill doesn't win on 1st 3 turns}) P(\text{Jack doesn't win on 1st 3 turns}) \\ &  * P(\text{Jill wins on 4th turn given she doesn't win on 1st 3 turn}) \\ 
+        &= P(A_1 + A_2 + A_3 < 4) P(B_1 + B_2 + B_3 < 4) \\
+        &*P(A_1 + A_2 + A_3 + A_4 \geq 4 \mid A_1 + A_2 + A_3 < 4) \\
+        &= P(A_1 + A_2 + A_3 < 4) P(B_1 + B_2+ B_3 < 4) \\
+        &* \frac{P(A_1 + A_2 + A_3 + A_4 \geq 4, A_1 + A_2 + A_3 < 4)}{P(A_1 + A_2 + A_3 < 4)} (\text{mailing tube 2.7}) \\
+        &= \frac{1}{216} * \frac{1}{216} * 1 = \frac{1}{216^2}
+    \end{align*}
+    P(Jill wins) = $\frac{3}{6} + \frac{5}{24} + \frac{17}{2592} + \frac{1}{216^2}$ = 0.715
+    \item P(Jill wins in 2 turns) 
+    \begin{align*}
+        P(\text{Jill wins second turn}) &= P(\text{Jill and Jack doesn't win on first turn, Jill wins on the second turn}) \\
+        &= P(\text{Jill doesn't win on 1st turn}) P(\text{Jack doesn't win on 1st turn}) \\ &  * P(\text{Jill wins on 2nd turn given she doesn't win on first turn}) \\ 
+        &= P(A_1 < 4) P(B_1 < 4) P(A_1 + A_2 \geq 4 \mid A_1 < 4) \\
+        &= P(A_1 < 4) P(B_1 < 4) * \frac{P(A_1 + A_2 \geq 4, A_1 < 4)}{P(A_1 < 4)} (\text{mailing tube 2.7}) \\ 
+        &= \frac{3}{6} * \frac{3}{6} * \frac{15}{18} = \frac{5}{24}
+    \end{align*}
+    \item $P(|\sum A_i - \sum B_i| = 1)$ 
+    \begin{align*}
+        P(|\sum A_i - \sum B_i| = 1) = P(\sum A_i = 4, \sum B_i = 3) + P(\sum A_i = 3, \sum B_i = 4) \\
+    \end{align*}
+    \begin{align*}
+        P(\sum A_i = 4, \sum B_i = 3) &= P(A_1 + A_2 = 4, B_1 = 3) + P(A_1 + A_2 + A_3 = 4, B_1 + B_2 = 3) \\
+        &+ P(A_1 + A_2 + A_3 + A_4 = 4, B_1 + B_2 + B_3 = 3) \\
+        P(A_1 + A_2 = 4, B_1 = 3) &= \frac{3}{36} * \frac{1}{6} = \frac{18}{36^2} \\
+        P(A_1 + A_2 + A_3 = 4, B_1 + B_2 = 3) &= \frac{3}{216} * \frac{2}{36} = \frac{12}{216^2} \\
+        P(A_1 + A_2 + A_3 + A_4 = 4, B_1 + B_2 + B_3 = 3) &= \frac{1}{6^4} * \frac{1}{6^3} = \frac{1}{6^7} \\ 
+        P(\sum A_i = 4, \sum B_i = 3) = \frac{18}{36^2} + \frac{12}{216^2} + \frac{1}{6^7} 
+    \end{align*}
+    
+    \begin{align*}
+        P(\sum A_i = 3, \sum B_i = 4) &= P(A_{1}=3,B_{1}=4)+P(A_{1}+A_{2}=3,B_{1}+B_{2}=4) \\ 
+        &+P(A_{1}+A_{2}+A_{3}=3,B_{1}+B_{2}+B_{3}=4) \\
+        P(A_{1}=3,B_{1}=4) &= \frac{1}{6} * \frac{1}{6} = \frac{1}{36} \\
+        P(A_{1}+A_{2}=3,B_{1}+B_{2}=4) &= \frac{2}{36} * \frac{3}{36} = \frac{6}{36^2} \\
+        P(A_{1}+A_{2}+A_{3}=3,B_{1}+B_{2}+B_{3}=4) &= \frac{1}{216} * \frac{3}{216} = \frac{3}{216^2} \\
+        P(\sum A_i = 3, \sum B_i = 4) = \frac{1}{36} + \frac{6}{36^2} + \frac{3}{216^2}
+    \end{align*}
+    $P(|\sum A_i - \sum B_i| = 1) = \frac{18}{36^2} + \frac{12}{216^2} + \frac{1}{6^7} + \frac{1}{36} + \frac{6}{36^2} + \frac{3}{216^2}$ = 0.047
+    \item 
+    \begin{align*}
+     P( \text {Jill's prize was \$6 given she wins}) &= P(\text {Jill's prize was \$6 $\mid$ Jill wins}) \\
+     &= \frac{P(\text {Jill wins $\mid$ Jill's prize was \$6})P(\text {Jill's prize was \$6 })}{P(\text {Jill wins})}(\text{Bayes' rule})\\
+     P(\text {Jill wins $\mid$ Jill's prize was \$6}) &= 1\\
+     P(\text {Jill wins }) &= 0.715\\
+     P(\text{Jill's prize was \$6}) &= P(\text{Jill's prize was \$6} \mid \text{Jill wins first turn})P(\text{Jill wins first turn}) \\ 
+     &+ P(\text{Jill's prize was \$6} \mid \text{Jill wins second turn})P(\text{Jill wins second turn}) \\
+     &+ P(\text{Jill's prize was \$6} \mid \text{Jill wins third turn})P(\text{Jill wins third turn})\\
+     &+ P(\text{Jill's prize was \$6} \mid \text{Jill wins fourth turn})P(\text{Jill wins fourth turn})\\
+     &= \frac{1}{3}\times \frac{3}{6} + \frac{3}{15}\times \frac{5}{24} + \frac{3}{17}\times \frac{17}{2592} + \frac{1}{6} \times \frac{1}{216^2}\\
+     &\approx 0.209\\  
+     P( \text {Jill's prize was \$6 given she wins}) &= \frac {0.209 \times 1}{ 0.715}\\
+     &= 0.292
+    \end{align*}
+    
+    \item Coding Problem. 
+    \begin{lstlisting}[language=R]
+        roll <- function() return(sample(1:6,1))
+    
+        simjj <- function(d,nreps) {
+          # Creating all the vectors 
+        	w <- vector(length=nreps)
+        	p <- vector(length=nreps)
+        	lD <- vector(length=nreps)
+        	for (rep in 1:nreps) {
+        	  # Initializing the total number of dots 
+        		dots1 <- 0
+        		dots2 <- 0
+        		# Simulating the game 
+        		while(dots1 < d && dots2 < d) {
+        			dots1 <- dots1 + roll()
+        			if(dots1 < d) {
+        				dots2 <- dots2 + roll()
+        			}
+        		}
+        		# Checking the winner 
+        		if(dots1 >= d) {
+        			w[rep] <- 'Jill'
+        			p[rep] <- dots1
+        			lD[rep] <- dots2
+        		} else {
+        			w[rep] <- 'Jack'
+        			p[rep] <- dots2
+        			lD[rep] <- dots1
+        		}
+        	}
+        	return (list(winner = w, prize = p, loserDots = lD))
+        }
+    \end{lstlisting}
+    
+\end{enumerate}
+\end{sol}
+
+\begin{prob}
+Coding Problem 
+\end{prob}
+
+\begin{sol}
+See Code. 
+\begin{lstlisting}[language=R]
+    pnk <- function(d,s,k) {
+      # Base Cases 
+      if (d<=0 || k<=0) return (0)
+      if (k > d) return (0)
+      if (k==1 && d==1) return (1)
+      if (d > k*s) return (0)
+      
+      # Recursion 
+      sum <- 0
+      for (r in 1:s) {
+        sum <- sum + pnk(d-r, s, k-1)
+      }
+      return (sum / s)
+    }
+\end{lstlisting}
+\end{sol}
+
+\begin{prob}
+Consider the bus ridership example. Say this is a tiny bus, with a limit of 3 passengers.
+\begin{enumerate}
+    \item Find the probabilities that 0, 1 or 2 waiting passengers at Stop 2 fail to board.
+    \item You plan to go to Stop 2 to take the bus. Find the probability that you are turned away. Assume rejected passengers are chosen randomly, and that you are there in addition to the usual 0, 1 or 2 waiting passengers.
+\end{enumerate}
+\end{prob}
+
+\begin{sol}
+Let $B_i$ be the number of people new passengers boarding the bus who board the bus at the $i$th stop. 
+Let $A_i$ be the number of passengers who left the bus at stop $i$, independently with probability 0.2. 
+As specified in the Bus Rider example, either 0,1, or 2 passengers get on the bus with probability $0.5, 0.4, 0.1$ respectively. \\ 
+\begin{enumerate}
+    \item 
+\begin{itemize}
+    \item P(0 people at stop 2 fail to board)
+    \begin{align*}
+        P(\text{0 people at stop 2 fail to board}) &= 1 - (P(\text{1 people at stop 2 fail to board})) \\ 
+        &= 1 - 0.0064 \\
+        &= 0.9936
+    \end{align*}
+    \item P(1 people at stop 2 fail to board) 
+    \begin{align*}
+        P(\text{1 people at stop 2 fail to board}) &= P(B_1 = 2, B_2 = 2, A_2 = 0) \\
+        &= (.1)(.1)(1-.2)^2 \\
+        &= .0064
+    \end{align*}
+    \item P(2 people at stop 2 fail to board) = 0
+\end{itemize}
+
+    \item Let $R_i$ bus seats open at stop $i$ and Let $W_i$ be the total number of people waiting at stop $i$ (including yourself) . 
+    P(rejected) = P(rejected, with 0 waiting passengers) + P(rejected, with 1 waiting passengers) + P(rejected, with 2 waiting passengers)
+    \begin{itemize}
+        \item P(rejected, with 0 waiting passengers) = 0 
+        \item P(rejected, with 1 waiting passengers) 
+        \begin{align*}
+            P(\text{rejected, with 1 waiting passengers}) &= P(B_1 = 2, B_2 = 1, A_2 = 0) * P(\text{being rejected}) \\ 
+            P(\text{being rejected}) =  1 - \frac{\text{ number of seats open on bus}}{\text{number of people waiting at stop}} &= 1 - \frac{R_2 = 1}{W_2 = 2} = .5\\
+            &= (.1)(.4)(1-.2)^2*(.5) \\
+            &= 0.0128
+        \end{align*}
+        \item P(rejected, with 2 waiting passengers)
+        
+        \begin{align*}
+            P(\text{rejected, with 2 waiting passengers}) &= P(B_1=2, B_2 = 2, A_2 = 0) P(\text{being rejected with } R_2 = 1, W_2 = 3) \\
+            &+ P(B_1=2, B_2 = 2, A_2 = 1) P(\text{being rejected with } R_2 = 2, W_2 = 3)\\
+            &+ P(B_1=1, B_2 = 2, A_2 = 0) P(\text{being rejected with } R_2 = 2, W_2 = 3)  
+        \end{align*}
+        
+        \begin{align*}
+            P(B_1=2, B_2 = 2, A_2 = 0) P(\text{being rejected with } R_2 = 1, W_2 = 3) 
+            &= (.1)(.1)(1-.2)^2*(\frac{2}{3}) \\
+            &= 0.0042
+        \end{align*}
+        \begin{align*}
+            P(B_1=2, B_2 = 2, A_2 = 1) P(\text{being rejected with } R_2 = 2, W_2 = 3) 
+            &=(.1)(.1)*2((1-.2)(.2))*(\frac{1}{3}) \\
+            &= 0.001
+        \end{align*}
+            
+        \begin{align*}
+            P(B_1=1, B_2 = 2, A_2 = 0) P(\text{being rejected with } R_2 = 2, W_2 = 3) &= (.4)(.1)(1-.2)^2*(\frac{1}{3}) \\
+            &= 0.009
+        \end{align*}
+        
+        \begin{align*}
+            P(\text{rejected, with 2 waiting passengers}) = 0.0042 + 0.001 + 0.009 =  0.0142
+        \end{align*}
+    \end{itemize}
+    P(rejected) = 0 + 0.0128 + 0.0142 = 0.027
+\end{enumerate}
+\end{sol}
+
+\begin{prob}
+Coding Problem 
+\end{prob}
+
+\begin{sol}
+See Code
+\begin{lstlisting}[language=R]
+    simvir <- function(c,r,m,n,nreps) {
+      
+      counter <- 0
+      # Simulating the reps 
+      for(reps in 1:nreps) {
+        # Creating the infected and non-infected 
+        infected <- 1 
+        noninfected <- (c - 1)
+        
+        # Simulating the epochs 
+        for (epoch in 1:m) {
+          # Temporary storing variables 
+          k <- infected
+          s <- noninfected 
+          # Simulating all the computers  
+          for (computer in 1:s) {
+            if (runif(1) > ((r)^k) ) {
+              noninfected <- noninfected - 1 
+              infected <- infected + 1 
+            }
+          }
+        }
+        if(noninfected == n) counter <- counter + 1 
+      }
+      return (counter / nreps)
+    }
+\end{lstlisting}
+\end{sol}
+
+\begin{prob}
+In Problem 1 (but with d = 3), find the expected value and variance of Jill's winnings. If she loses, her winnings are \$0. Note that the expected value is the long-run average of a column labeled "Jill's winnings."
+\end{prob}
+
+\begin{sol}
+E(Prize Money) = $$\sum_{i=3}^8 i * P(\text{Jill winning prize} = \$i)$$
+
+
+Let $A_i$ be the roll of Jill and $B_i$ be the roll of Jack where $i$ denotes the turn number. \\
+
+\hrulefill
+
+\begin{align*}
+    P(\text{Jill wins \$3}) = P(\text{rolls a 3 on round 1 or rolls a total of 3 on round 2 or rolls a total of 3 on round 3}) \\
+    P(\text{Jill wins \$3}) = P(\text{rolls a 3 on round 1}) + P(\text{rolls a total of 3 on round 2}) + P(\text{rolls a total of 3 on round 3})
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a 3 on round 1}) = \frac{1}{6}
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a total of 3 on round 2}) &= P(\text{Jack and Jill did not win round 1}) \\
+    &*P(\text{Jill rolls add up to 3} \mid \text{she didn't win round 1}) \\
+    &= \frac{2}{6} * \frac{2}{6} * \frac{2}{12}
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a total of 3 on round 3}) &= P(\text{Jack and Jill did not win round 2}) \\
+    &*P(\text{Jill rolls add up to 3} \mid \text{she didn't win round 1 and 2}) \\
+    &= \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}
+\end{align*}
+
+P(Jill wins \$3) = $\frac{1}{6} + (\frac{2}{6} * \frac{2}{6} * \frac{2}{12}) +(\frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}) = 0.1853$
+
+\hrulefill
+
+\begin{align*}
+    P(\text{Jill wins \$4}) = P(\text{rolls a 4 on round 1 or rolls a total of 4 on round 2 or rolls a total of 4 on round 3}) \\
+    P(\text{Jill wins \$4}) = P(\text{rolls a 4 on round 1}) + P(\text{rolls a total of 4 on round 2}) + P(\text{rolls a total of 4 on round 3})
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a 4 on round 1}) = \frac{1}{6}
+\end{align*}
+
+
+\begin{align*}
+    P(\text{rolls a total of 4 on round 2}) &= P(\text{Jack and Jill did not win round 1})P(\text{Jill rolls add up to 4} \mid \text{she didn't win round 1}) \\
+    &= \frac{2}{6} * \frac{2}{6} * \frac{2}{12}
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a total of 4 on round 3}) &= P(\text{Jack and Jill did not win round 1 or 2})\\
+    &*P(\text{Jill rolls add up to 4} \mid \text{she didn't win round 1 and 2}) \\
+    &= \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}
+\end{align*}
+
+P(Jill wins \$4) = $\frac{1}{6} + (\frac{2}{6} * \frac{2}{6} * \frac{2}{12}) +(\frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}) = 0.1853$
+
+\hrulefill
+
+\begin{align*}
+    P(\text{Jill wins \$5}) = P(\text{rolls a 5 on round 1 or rolls a total of 5 on round 2 or rolls a total of 5 on round 3}) \\
+    P(\text{Jill wins \$5}) = P(\text{rolls a 5 on round 1}) + P(\text{rolls a total of 5 on round 2}) + P(\text{rolls a total of 5 on round 3})
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a 5 on round 1}) = \frac{1}{6}
+\end{align*}
+
+
+\begin{align*}
+    P(\text{rolls a total of 5 on round 2}) &= P(\text{Jack and Jill did not win round 1})P(\text{Jill rolls add up to 5} \mid \text{she didn't win round 1}) \\
+    &= \frac{2}{6} * \frac{2}{6} * \frac{2}{12}
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a total of 5 on round 3}) &= P(\text{Jack and Jill did not win round 2}) \\
+    &*P(\text{Jill rolls add up to 5} \mid \text{she didn't win round 1 and 2}) \\
+    &= \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}
+\end{align*}
+
+P(Jill wins \$5) = $\frac{1}{6} + (\frac{2}{6} * \frac{2}{6} * \frac{2}{12}) +(\frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}) = 0.1853$
+
+\hrulefill
+
+\begin{align*}
+    P(\text{Jill wins \$6}) = P(\text{rolls a 6 on round 1 or rolls a total of 6 on round 2 or rolls a total of 6 on round 3}) \\
+    P(\text{Jill wins \$3}) = P(\text{rolls a 6 on round 1}) + P(\text{rolls a total of 6 on round 2}) + P(\text{rolls a total of 6 on round 3})
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a 6 on round 1}) = \frac{1}{6}
+\end{align*}
+
+
+\begin{align*}
+    P(\text{rolls a total of 6 on round 2}) &= P(\text{Jack and Jill did not win round 1})P(\text{Jill rolls add up to 6} \mid \text{she didn't win round 1}) \\
+    &= \frac{2}{6} * \frac{2}{6} * \frac{2}{12}
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a total of 6 on round 3}) &= P(\text{Jack and Jill did not win round 2}) \\
+    &*P(\text{Jill rolls add up to 6} \mid \text{she didn't win round 1 and 2}) \\
+    &= \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}
+\end{align*}
+
+P(Jill wins \$6) = $\frac{1}{6} + (\frac{2}{6} * \frac{2}{6} * \frac{2}{12}) +(\frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}) = 0.1853$
+
+\hrulefill
+
+P(Jill wins \$7) \\
+\begin{align*}
+    P(\text{Jill wins \$7}) &= P(\text{rolls a total of 7 on round 2 or  rolls a total of 7 on round 3}) \\
+    &=P(\text{rolls a total of 7 on round 2}) + P(\text{rolls a total of 7 on round 3}) 
+\end{align*}
+
+
+
+\begin{align*}
+    P(\text{rolls a total of 7 on round 2}) &= P(\text{Jack and Jill did not win round 1})P(\text{Jill rolls add up to 7} \mid \text{she didn't win round 1}) \\
+    &= \frac{2}{6} * \frac{2}{6} * \frac{2}{12}
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a total of 7 on round 3}) &= P(\text{Jack and Jill did not win round 2}) \\
+    &*P(\text{Jill rolls add up to 7} \mid \text{she didn't win round 1 and 2}) \\
+    &= \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}
+\end{align*}
+
+P(Jill wins \$7) = $(\frac{2}{6} * \frac{2}{6} * \frac{2}{12}) +(\frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}) = 0.01865$
+
+\hrulefill
+
+P(Jill wins \$8) \\  
+\begin{align*}
+    P(\text{Jill wins \$8}) &= P(\text{rolls a total of 8 on round 2 or rolls a total of 8 on round 3}) \\
+    &=P(\text{rolls a total of 8 on round 2}) + P(\text{rolls a total of 8 on round 3}) 
+\end{align*}
+
+
+\begin{align*}
+    P(\text{rolls a total of 8 on round 2}) &= P(\text{Jack and Jill did not win round 1})P(\text{Jill rolls add up to 8} \mid \text{she didn't win round 1}) \\
+    &= \frac{2}{6} * \frac{2}{6} * \frac{1}{12}
+\end{align*}
+
+\begin{align*}
+    P(\text{rolls a total of 8 on round 3}) &= P(\text{Jack and Jill did not win round 2})\\
+    &*P(\text{Jill rolls add up to 8} \mid \text{she didn't win round 1 and 2}) \\
+    &= \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}
+\end{align*}
+
+P(Jill wins \$8) = $(\frac{2}{6} * \frac{2}{6} * \frac{1}{12}) +(\frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6} * \frac{1}{6}) = 0.00938$
+
+\hrulefill
+
+\begin{align*}
+    E(\text{Prize Money}) &= 3(0.1853) + 4(0.1853) \\
+                    &+ 5(0.1853) + 6(0.1853) \\
+                    &+ 7(0.01865) + 8(0.00938) \\
+                    &+ 0*P(\text{She didn't win}) \\
+                    &= 3.541
+\end{align*}
+
+Var(Prize Money) = E((Prize Money)$^2$) - (E(Prize Money))$^2$ \\ 
+(E(Prize Money))$^2$ = $(3.541)^2$ = $12.54$\\ 
+
+
+E((Prize Money)$^2$) = 
+$$\sum_{i=3}^8 i^2 * P(\text{Jill winning prize} = \$i)$$
+\begin{align*}
+    E(\text{Prize Money}^2) &= 3^2(0.1853) + 4^2(0.1853) \\
+                    &+ 5^2(0.1853) + 6^2(0.1853) \\
+                    &+ 7^2(0.01865) + 8^2(0.00938) \\
+                    &+ 0*P(\text{She didn't win}) \\
+                    &= 17.45
+\end{align*}
+Var(Prize Money) = 17.45 - 12.54 = 4.91
+
+\end{sol}
+\end{document}
